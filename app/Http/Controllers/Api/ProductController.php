@@ -67,11 +67,9 @@ class ProductController extends Controller
      */
     public function destroy(Product $product)
     {
-        if ($product) {
-            $product->delete();
-        }
+        $product->deleteOrFail();
 
         $productResource = new ProductResource($product);
-        return response()->json($productResource, Response::HTTP_NO_CONTENT);
+        return $productResource;
     }
 }
