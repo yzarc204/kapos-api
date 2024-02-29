@@ -2,10 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Filters\Api\ProductFilter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreCategoryRequest;
 use App\Http\Requests\Api\UpdateCategoryRequest;
 use App\Http\Resources\Api\CategoryResource;
+use App\Http\Resources\Api\ProductCollection;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
@@ -20,7 +22,7 @@ class CategoryController extends Controller
         $categories = Category::paginate();
         $categoriesCollection = CategoryResource::collection($categories);
 
-        return $categoriesCollection;
+        return response()->json($categoriesCollection, Response::HTTP_OK);
     }
 
     /**
@@ -40,9 +42,11 @@ class CategoryController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Category $category)
+    public function show(Request $request, Category $category)
     {
-        return new CategoryResource($category);
+        $categoryResource = new CategoryResource($category);
+
+        return response()->json($categoryResource, Response::HTTP_OK);
     }
 
     /**
@@ -71,5 +75,19 @@ class CategoryController extends Controller
         $categoryResource = new CategoryResource($category);
 
         return $categoryResource;
+    }
+
+    public function products(Request $request, string $id)
+    {
+        $category = Category::findOrFail($id);
+
+        $filter = new ProductFilter();
+        $filterQuery = $filter->getFilterQuery($request);
+        $orderByQuery = $filter->getOrderByQuery($request);
+
+        $products = $category->products()->where($filterQuery)->orderBy($orderByQuery[0], $orderByQuery[1])->paginate();
+
+        $productCollection = new ProductCollection($products->withQueryString());
+        return response()->json($productCollection, Response::HTTP_OK);
     }
 }

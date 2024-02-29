@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreProductRequest extends FormRequest
 {
@@ -28,7 +29,9 @@ class StoreProductRequest extends FormRequest
             'price' => ['required', 'integer', 'min:0'],
             'unit' => ['required', 'max:255'],
             'description' => ['required'],
-            'feature_image' => ['required', 'max:255']
+            'feature_image' => ['required', 'max:255'],
+            'categories' => ['sometimes', 'array'],
+            'categories.*' => ['required', Rule::exists('categories', 'id')],
         ];
     }
 }

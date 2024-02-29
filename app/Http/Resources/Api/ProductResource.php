@@ -22,7 +22,8 @@ class ProductResource extends JsonResource
             'price' => $this->price,
             'unit' => $this->unit,
             'description' => $this->description,
-            'feature_image' => ($this->feature_image) ? asset($this->feature_image) : null
+            'feature_image' => ($this->feature_image) ? asset($this->feature_image) : null,
+            'categories' => CategoryResource::collection($this->whenLoaded('categories')),
         ];
     }
 }

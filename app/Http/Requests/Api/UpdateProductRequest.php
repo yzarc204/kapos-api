@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Api;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateProductRequest extends FormRequest
 {
@@ -29,7 +30,9 @@ class UpdateProductRequest extends FormRequest
                 'price' => ['required', 'integer', 'min:0'],
                 'unit' => ['required', 'max:255'],
                 'description' => ['required'],
-                'feature_image' => ['required', 'max:255']
+                'feature_image' => ['required', 'max:255'],
+                'categories' => ['sometimes', 'array'],
+                'categories.*' => ['required', Rule::exists('categories', 'id')],
             ];
         } else {
             return [
@@ -38,7 +41,9 @@ class UpdateProductRequest extends FormRequest
                 'price' => ['sometimes', 'integer', 'min:0'],
                 'unit' => ['sometimes', 'max:255'],
                 'description' => ['sometimes'],
-                'feature_image' => ['sometimes', 'max:255']
+                'feature_image' => ['sometimes', 'max:255'],
+                'categories' => ['sometimes', 'array'],
+                'categories.*' => ['required', Rule::exists('categories', 'id')],
             ];
         }
     }

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\CustomerController;
 use App\Http\Controllers\Api\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -25,5 +26,9 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('product', ProductController::class);
+
     Route::apiResource('category', CategoryController::class);
+    Route::get('/category/{id}/product', [CategoryController::class, 'products']);
+
+    Route::apiResource('customer', CustomerController::class);
 });

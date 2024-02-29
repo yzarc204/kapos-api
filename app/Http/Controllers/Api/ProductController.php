@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Filters\Api\ProductFilter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\StoreProductRequest;
 use App\Http\Requests\Api\UpdateProductRequest;
@@ -16,12 +17,19 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $products = Product::paginate(10);
-        $productsCollection = ProductResource::collection($products);
+        $filter = new ProductFilter();
+        $filterQuery = $filter->getFilterQuery($request);
+        $orderByQuery = $filter->getOrderByQuery($request);
 
-        return $productsCollection;
+        $products = Product::where($filterQuery)->orderBy($orderByQuery[0], $orderByQuery[1])->paginate();
+        if ($request->has('includeCategories')) {
+            $products->loadMissing('categories');
+        }
+
+        $productsCollection = new ProductCollection($products->withQueryString());
+        return response()->json($productsCollection, Response::HTTP_OK);
     }
 
     /**
@@ -29,12 +37,17 @@ class ProductController extends Controller
      */
     public function store(StoreProductRequest $request)
     {
-        $productFields = $request->only('name', 'cost', 'price', 'unit', 'description', 'feature_image');
+        $productFields = $request->only('name', 'cost', 'price', 'unit', 'description', 'feature_image', 'categories');
         $productFields['slug'] = str_slug($productFields['name']);
 
         $product = Product::create($productFields);
-        $productResource = new ProductResource($product);
+        if ($request->has('categories')) {
+            $categories = $request->input('categories');
+            $product->categories()->sync($categories);
+        }
+        $product->loadMissing('categories');
 
+        $productResource = new ProductResource($product);
         return response()->json($productResource, Response::HTTP_CREATED);
     }
 
@@ -43,7 +56,10 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        return new ProductResource($product);
+        $product->loadMissing('categories');
+        $productResource = new ProductResource($product);
+
+        return response()->json($productResource, Response::HTTP_OK);
     }
 
     /**
@@ -56,7 +72,13 @@ class ProductController extends Controller
             $productFields['slug'] = str_slug($productFields['name']);
         }
 
+        if ($request->has('categories')) {
+            $categories = $request->input('categories');
+            $product->categories()->sync($categories);
+        }
+
         $product->update($productFields);
+        $product->loadMissing('categories');
         $productResource = new ProductResource($product);
 
         return response()->json($productResource, Response::HTTP_CREATED);
